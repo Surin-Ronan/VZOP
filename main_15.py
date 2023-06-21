@@ -1,6 +1,7 @@
 import sys
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtMultimedia import QMediaPlayer
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QPushButton, \
     QMessageBox
 
@@ -18,15 +19,10 @@ step = 1
 B, W, G, C, N = 'лодка', 'волк', 'коза', 'качан', 'ничего'
 
 
-class QMessage:
-    @classmethod
-    def question(cls):
-        pass
-
-
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.widget = None
         self.click = None
         self.game_layout = None
 
@@ -55,7 +51,7 @@ class MainWindow(QWidget):
         self.setLayout(self.main_layout)
         self.setWindowTitle('Волк Коза Капуста')
         self.setGeometry(800, 100, 450, 600)
-
+        self.setFixedSize(450, 750)
     # Создание игрового поля
     def create_game_field(self):
         if game:
@@ -90,49 +86,31 @@ class MainWindow(QWidget):
                 situation[list(situation.keys())[selected_object]] = 'R'
             else:
                 situation[list(situation.keys())[selected_object]] = 'L'
-
+            step = 2
             if step > 1:
-                if situation[G] == situation[C] != situation[B] or situation[G] == situation[C] != 'R':
+                if situation[G] == situation[C] != situation[B]:
                     game = False
                     QMessageBox.information(self, 'Поражение', "Коза съела капусту.", QMessageBox.Ok)
-                    result = QMessageBox.information(self, 'Поражение', 'Вы проиграли!')
-                    if result == QMessageBox.Ok:
-                        sys.exit(app.exec())
-                if situation[G] == situation[W] != situation[B] or situation[G] == situation[W] != 'R':
-                    game = False
-                    QMessageBox.information(self, 'Поражение', "Волк съел козу.", QMessageBox.Ok)
-                    result = QMessageBox.information(self, 'Поражение', 'Вы проиграли!')
-                    if result == QMessageBox.Ok:
-                        sys.exit(app.exec())
-                if (situation[B] == situation[W] == situation[G] == situation[C] == 'R') or (
-                        situation[B] == situation[W] == situation[G] == situation[C] == 'L'):
-                    game = False
-                    QMessageBox.information(self, 'Победа!!!', "Вы успешно переправили всех на другой берег.",
-                                            QMessageBox.Ok)
-                    result = QMessageBox.information(self, 'Победа!', 'Вы выиграли!')
-                    if result == QMessageBox.Ok:
-                        sys.exit(app.exec())
-            if step > 1:
-                while situation[G] == situation[C] != situation[B] or situation[G] == situation[C] != 'L':
-                    game = False
-                    QMessageBox.information(self, 'Поражение', "Коза съела капусту.", QMessageBox.Ok)
-                    result = QMessageBox.information(self, 'Поражение', 'Вы проиграли!')
-                    if result == QMessageBox.Ok:
-                        sys.exit(app.exec())
-                while situation[G] == situation[W] != situation[B] or situation[G] == situation[W] != 'L':
-                    game = False
-                    QMessageBox.information(self, 'Поражение', "Волк съел козу.", QMessageBox.Ok)
-                    result = QMessageBox.information(self, 'Поражение', 'Вы проиграли!')
-                    if result == QMessageBox.Ok:
-                        sys.exit(app.exec())
-                while (situation[B] == situation[W] == situation[G] == situation[C] == 'R') or (
-                        situation[B] == situation[W] == situation[G] == situation[C] == 'L'):
-                    game = False
-                    QMessageBox.information(self, 'Победа!!!', "Вы успешно переправили всех на другой берег.",
-                                            QMessageBox.Ok)
-                    result = QMessageBox.information(self, 'Победа!', 'Вы выиграли!')
-                    if result == QMessageBox.Ok:
-                        sys.exit(app.exec())
+                else:
+                     if (situation[G] == situation[W] == 'L') and (situation[B] == situation[C] == 'R'):
+                        game = False
+                        QMessageBox.information(self, 'Поражение', "Волк съел козу.", QMessageBox.Ok)
+                     else:
+                        if (situation[G] == situation[W] == 'R') and (situation[B] == situation[C] == 'L'):
+                            game = False
+                            QMessageBox.information(self, 'Поражение', "Волк съел козу.", QMessageBox.Ok)
+                        else:
+                            if (situation[G] == situation[W] == situation[C] == 'L') and (situation[B] == 'R'):
+                                game = False
+                                QMessageBox.information(self, 'Поражение', "Поражение", QMessageBox.Ok)
+                            else:
+                                if situation[B] == situation[W] == situation[G] == situation[C] == 'R':
+                                    game = False
+                                    QMessageBox.information(self, 'Победа!!!', "Вы успешно переправили всех на другой берег.", QMessageBox.Ok)
+                                else:
+                                    if situation[G] not in [situation[C], situation[W]] and situation[G] == 'L' != situation[B]:
+                                        game = False
+                                        QMessageBox.information(self, 'Поражение', "Вы не смогли переправить всех на другой берег.", QMessageBox.Ok)
         self.game_layout = QGridLayout()
         index = 0
         for i in range(4):
@@ -193,12 +171,13 @@ class MainWindow(QWidget):
                         label = QLabel()
                         label.setStyleSheet('border: 2px solid yellow')
                         self.game_layout.addWidget(label, i, j)
-
         return super(QWidget, self).eventFilter(obj, event)
+
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.close()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
